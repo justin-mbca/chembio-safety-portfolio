@@ -113,6 +113,19 @@ async def read_root():
 @app.post("/assess-safety", response_model=SafetyResponse, summary="Assess text for chemical/biological risks")
 async def assess_safety(request: SafetyRequest):
     """
+    Assess chemical and biological safety risks in text (basic mode)
+    """
+    return await _assess_safety_internal(request, enhanced_mode=False)
+
+@app.post("/assess-safety-enhanced", response_model=SafetyResponse, summary="Enhanced assessment with database integration")  
+async def assess_safety_enhanced(request: SafetyRequest):
+    """
+    Enhanced assessment with Phase 1 database integration
+    """
+    return await _assess_safety_internal(request, enhanced_mode=True)
+
+async def _assess_safety_internal(request: SafetyRequest, enhanced_mode: bool = False):
+    """
     Assess chemical and biological safety risks in text
     """
     if not model or not tokenizer:
@@ -126,11 +139,25 @@ async def assess_safety(request: SafetyRequest):
     start_time = time.time()
     
     try:
-        # Process request through safety middleware
-        processed_text, risk_assessment = await safety_middleware.process_request(
-            request.text,
-            request.context or {}
-        )
+        # Use enhanced assessment if requested and available
+        if enhanced_mode:
+            try:
+                risk_assessment = await model.enhanced_predict_risk(
+                    request.text,
+                    tokenizer,
+                    next(model.parameters()).device
+                )
+                processed_text = request.text  # No text modification in direct mode
+            except Exception as e:
+                print(f"Enhanced assessment failed, falling back to basic: {e}")
+                enhanced_mode = False
+        
+        if not enhanced_mode:
+            # Process request through safety middleware (basic mode)
+            processed_text, risk_assessment = await safety_middleware.process_request(
+                request.text,
+                request.context or {}
+            )
         
         processing_time = (time.time() - start_time) * 1000
         
