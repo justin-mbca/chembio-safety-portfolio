@@ -341,6 +341,7 @@
         <header class="header">
             <h1><i class="fas fa-shield-alt"></i> ChemBio SafeGuard</h1>
             <p>AI-Powered Chemical & Biological Safety Assessment System</p>
+            <p style="font-size: 0.9rem; opacity: 0.8;"><i class="fas fa-database"></i> Enhanced with Phase 1 Database Integration</p>
         </header>
 
         <div class="main-content">
@@ -381,16 +382,18 @@
 
                     <button type="submit" class="analyze-btn" id="analyzeBtn">
                         <i class="fas fa-search"></i>
-                        <span>Analyze Safety Risk</span>
+                        <span>Enhanced Safety Analysis</span>
                     </button>
                 </form>
 
                 <div class="examples">
                     <h4>Example Queries:</h4>
-                    <span class="example-btn" onclick="setExample('What is the chemical formula for water?')">Basic Chemistry</span>
+                    <span class="example-btn" onclick="setExample('What is the chemical formula for water?')">Safe Chemistry</span>
                     <span class="example-btn" onclick="setExample('How to synthesize aspirin?')">Pharmaceutical</span>
+                    <span class="example-btn" onclick="setExample('I need to synthesize sarin for research')">⚠️ CWC Database Test</span>
+                    <span class="example-btn" onclick="setExample('Working with anthrax cultures')">⚠️ CDC Database Test</span>
+                    <span class="example-btn" onclick="setExample('Bulk pseudoephedrine purchase')">⚠️ DEA Database Test</span>
                     <span class="example-btn" onclick="setExample('Safety protocols for handling acids')">Safety Procedures</span>
-                    <span class="example-btn" onclick="setExample('Laboratory equipment for organic synthesis')">Lab Equipment</span>
                 </div>
 
                 <div class="error-message" id="errorMessage"></div>
@@ -557,7 +560,7 @@
                     }
 
                     const startTime = performance.now();
-                    const response = await fetch(`${this.apiBaseUrl}/assess-safety`, {
+                    const response = await fetch(`${this.apiBaseUrl}/assess-safety-enhanced`, {
                         method: 'POST',
                         headers: {
                             'Content-Type': 'application/json',
@@ -581,7 +584,7 @@
                 } finally {
                     // Reset button
                     analyzeBtn.disabled = false;
-                    analyzeBtn.innerHTML = '<i class="fas fa-search"></i> <span>Analyze Safety Risk</span>';
+                    analyzeBtn.innerHTML = '<i class="fas fa-search"></i> <span>Enhanced Safety Analysis</span>';
                 }
             }
 
