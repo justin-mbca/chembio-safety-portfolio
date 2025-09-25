@@ -487,6 +487,11 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ## 📧 Contact & Repository  
 
+**Xiangli (Justin) Zhang**  
+📧 justinzhang.xl@gmail.com  
+💼 [LinkedIn Profile](https://linkedin.com/in/justinzh)  
+🐙 [GitHub Profile](https://github.com/justin-mbca)  
+
 **Repository**: [justin-mbca/chembio-safety-portfolio](https://github.com/justin-mbca/chembio-safety-portfolio)  
 **Live Demo**: Available after `./start_system.sh` at http://localhost:3001  
 **API Docs**: Available at http://localhost:8000/docs  
@@ -496,6 +501,8 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 **🚀 ChemBio SafeGuard - Complete AI Safety System**
 
 *Production-ready chemical & biological risk assessment with modern web interface, hybrid ML+rule-based detection, and comprehensive safety measures.*
+
+**Developed by Xiangli (Justin) Zhang** - Senior Scientist & Engineer with 15+ years experience in machine learning, bioinformatics, and chemical process engineering.
 
 ChemBio-SafeGuard: End-to-End LLM Safety System for Chemical & Biological Misuse Prevention
 Project Overview
