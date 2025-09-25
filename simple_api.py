@@ -4,6 +4,7 @@ Simple FastAPI deployment for testing the Chemical & Biological Safety System
 """
 
 from fastapi import FastAPI, HTTPException
+from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field
 from typing import Optional, Dict, Any
 import torch
@@ -50,6 +51,15 @@ app = FastAPI(
     title="Chemical & Biological Safety API",
     description="AI-powered safety system for detecting and mitigating chemical/biological risks in text",
     version="1.0.0"
+)
+
+# Add CORS middleware
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],  # In production, specify your frontend domain
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
 )
 
 @app.on_event("startup")

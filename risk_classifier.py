@@ -153,13 +153,40 @@ class ChemBioRiskClassifier(nn.Module):
             confidence = outputs['confidence'].cpu().item()
             intent_probs = outputs['intent_probs'].cpu().numpy()[0]
             
-            # Find highest risk category
-            risk_idx = np.argmax(risk_probs)
-            risk_score = risk_probs[risk_idx]
-            risk_category = self.risk_categories[risk_idx]
+            # Determine risk category using thresholds, not just argmax
+            # This prevents false positives when all probabilities are low
+            critical_prob = risk_probs[4]  # critical_risk
+            high_prob = risk_probs[3]      # high_risk  
+            medium_prob = risk_probs[2]    # medium_risk
+            low_prob = risk_probs[1]       # low_risk
+            benign_prob = risk_probs[0]    # benign
             
-            # Generate explanation
-            explanation = self._generate_explanation(text, risk_probs, intent_probs)
+            # Use conservative thresholds - require high confidence for risk categories
+            if critical_prob > 0.7:  # Need 70%+ confidence for critical
+                risk_category = "critical_risk"
+                risk_score = critical_prob
+            elif high_prob > 0.6:    # Need 60%+ confidence for high risk
+                risk_category = "high_risk"  
+                risk_score = high_prob
+            elif medium_prob > 0.5:  # Need 50%+ confidence for medium risk
+                risk_category = "medium_risk"
+                risk_score = medium_prob
+            elif low_prob > 0.4:     # Need 40%+ confidence for low risk
+                risk_category = "low_risk"
+                risk_score = low_prob
+            else:                    # Default to benign if no strong signal
+                risk_category = "benign"
+                risk_score = benign_prob
+            
+            # Apply keyword-based safety net
+            keyword_risk = self._check_dangerous_keywords(text)
+            if keyword_risk:
+                risk_category = keyword_risk["category"]
+                risk_score = keyword_risk["score"]
+                explanation = f"Keyword safety filter triggered: {keyword_risk['reason']}"
+            else:
+                # Generate explanation from ML model
+                explanation = self._generate_explanation(text, risk_probs, intent_probs)
             
             # Determine mitigation action
             mitigation_action = self._determine_mitigation(risk_score, risk_category)
@@ -205,14 +232,94 @@ class ChemBioRiskClassifier(nn.Module):
     def _determine_mitigation(self, risk_score: float, risk_category: str) -> str:
         """Determine appropriate mitigation action based on risk level"""
         
-        if risk_category == "critical_risk" or risk_score > 0.9:
+        if risk_category == "critical_risk" and risk_score > 0.8:
             return "BLOCK_COMPLETELY"
-        elif risk_category == "high_risk" or risk_score > 0.7:
-            return "MODIFY_RESPONSE"
-        elif risk_category == "medium_risk" or risk_score > 0.4:
+        elif risk_category == "high_risk" and risk_score > 0.7:
+            return "MODIFY_RESPONSE" 
+        elif risk_category == "medium_risk" and risk_score > 0.6:
             return "ADD_WARNING"
-        else:
+        elif risk_category == "low_risk":
             return "ALLOW_WITH_MONITORING"
+        else:  # benign or low confidence predictions
+            return "ALLOW_WITH_MONITORING"
+    
+    def _check_dangerous_keywords(self, text: str) -> Optional[Dict]:
+        """
+        Keyword-based safety net to catch obviously dangerous content
+        Returns risk override if dangerous keywords detected, None otherwise
+        """
+        text_lower = text.lower()
+        
+        # Critical risk keywords - immediate block
+        critical_keywords = [
+            # Explosives and weapons
+            "make explosives", "create bomb", "build bomb", "homemade bomb",
+            "explosive device", "pipe bomb", "pressure cooker bomb",
+            "improvised explosive", "ied", "suicide bomb",
+            
+            # Biological weapons  
+            "biological weapon", "bioweapon", "weaponize", "anthrax weapon",
+            "ricin production", "botulinum weapon", "plague weapon",
+            "biological warfare agent", "pathogen weapon",
+            
+            # Chemical weapons
+            "chemical weapon", "nerve gas", "sarin production", "vx gas",
+            "mustard gas synthesis", "chlorine gas weapon", "poison gas",
+            "chemical warfare agent",
+            
+            # Illegal drugs - manufacturing focus
+            "synthesize methamphetamine", "make meth", "cook meth",
+            "manufacture heroin", "synthesize fentanyl", "make fentanyl",
+            "mdma synthesis", "lsd synthesis", "cocaine production",
+            
+            # Assassination/violence
+            "assassination method", "poison someone", "kill someone",
+            "murder technique", "deadly poison recipe"
+        ]
+        
+        # High risk keywords - needs modification
+        high_risk_keywords = [
+            "home lab synthesis", "unregulated synthesis", "illegal synthesis",
+            "dangerous compound", "toxic synthesis", "harmful chemical production",
+            "bypass safety", "without permits", "underground lab"
+        ]
+        
+        # Check for critical risk patterns
+        for keyword in critical_keywords:
+            if keyword in text_lower:
+                return {
+                    "category": "critical_risk",
+                    "score": 0.95,
+                    "reason": f"Contains dangerous keyword: '{keyword}'"
+                }
+        
+        # Check for high risk patterns  
+        for keyword in high_risk_keywords:
+            if keyword in text_lower:
+                return {
+                    "category": "high_risk", 
+                    "score": 0.85,
+                    "reason": f"Contains concerning keyword: '{keyword}'"
+                }
+        
+        # Check for suspicious combinations
+        suspicious_combos = [
+            (["home", "synthesis"], ["explosive", "drug", "weapon", "toxic"]),
+            (["diy", "homemade"], ["bomb", "explosive", "poison", "weapon"]),
+            (["kitchen", "garage"], ["lab", "synthesis", "production", "manufacture"])
+        ]
+        
+        for location_words, danger_words in suspicious_combos:
+            has_location = any(word in text_lower for word in location_words)
+            has_danger = any(word in text_lower for word in danger_words)
+            if has_location and has_danger:
+                return {
+                    "category": "high_risk",
+                    "score": 0.80, 
+                    "reason": "Suspicious combination: home/DIY + dangerous synthesis"
+                }
+        
+        return None
 
 
 class SafetyMiddleware:

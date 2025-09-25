@@ -1,0 +1,654 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ChemBio SafeGuard - AI Safety System</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .header {
+            text-align: center;
+            color: white;
+            margin-bottom: 30px;
+        }
+
+        .header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .header p {
+            font-size: 1.2rem;
+            opacity: 0.9;
+        }
+
+        .main-content {
+            display: grid;
+            grid-template-columns: 1fr 300px;
+            gap: 30px;
+            margin-bottom: 30px;
+        }
+
+        .safety-panel {
+            background: white;
+            border-radius: 15px;
+            padding: 30px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+
+        .stats-panel {
+            background: white;
+            border-radius: 15px;
+            padding: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 600;
+            color: #555;
+        }
+
+        .form-group textarea {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 16px;
+            resize: vertical;
+            min-height: 120px;
+            transition: border-color 0.3s ease;
+        }
+
+        .form-group textarea:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+        }
+
+        .form-group input {
+            width: 100%;
+            padding: 10px;
+            border: 2px solid #e0e0e0;
+            border-radius: 6px;
+            font-size: 14px;
+            transition: border-color 0.3s ease;
+        }
+
+        .form-group input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .analyze-btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            font-size: 16px;
+            font-weight: 600;
+            border-radius: 8px;
+            cursor: pointer;
+            width: 100%;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+
+        .analyze-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        .analyze-btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .results-section {
+            margin-top: 25px;
+            padding: 20px;
+            border-radius: 10px;
+            display: none;
+        }
+
+        .risk-indicator {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .risk-badge {
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-weight: 600;
+            font-size: 14px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .risk-benign { background: #e8f5e8; color: #2e7d32; }
+        .risk-low_risk { background: #fff3cd; color: #8b6f00; }
+        .risk-medium_risk { background: #ffeaa7; color: #d63031; }
+        .risk-high_risk { background: #ffcccb; color: #c62828; }
+        .risk-critical_risk { background: #ffcdd2; color: #b71c1c; }
+
+        .risk-score {
+            font-size: 2rem;
+            font-weight: bold;
+            color: #667eea;
+        }
+
+        .risk-details {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .detail-card {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 8px;
+            border-left: 4px solid #667eea;
+        }
+
+        .detail-card h4 {
+            margin-bottom: 5px;
+            color: #555;
+            font-size: 14px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .detail-card p {
+            font-size: 16px;
+            font-weight: 600;
+        }
+
+        .mitigation-section {
+            background: #f1f3f4;
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 15px;
+        }
+
+        .mitigation-section h4 {
+            margin-bottom: 10px;
+            color: #d63031;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .explanation {
+            background: #e3f2fd;
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 15px;
+            border-left: 4px solid #2196f3;
+        }
+
+        .stats-card {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 15px;
+            text-align: center;
+        }
+
+        .stats-card h3 {
+            color: #667eea;
+            margin-bottom: 5px;
+            font-size: 1.8rem;
+        }
+
+        .stats-card p {
+            color: #666;
+            font-size: 14px;
+        }
+
+        .api-status {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 10px 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            font-weight: 600;
+        }
+
+        .status-online {
+            background: #e8f5e8;
+            color: #2e7d32;
+        }
+
+        .status-offline {
+            background: #ffebee;
+            color: #c62828;
+        }
+
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #667eea;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .error-message {
+            background: #ffebee;
+            color: #c62828;
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 15px;
+            display: none;
+        }
+
+        .examples {
+            margin-top: 15px;
+        }
+
+        .examples h4 {
+            margin-bottom: 10px;
+            color: #555;
+        }
+
+        .example-btn {
+            background: #f8f9fa;
+            border: 1px solid #e0e0e0;
+            padding: 8px 12px;
+            margin: 5px;
+            border-radius: 20px;
+            cursor: pointer;
+            font-size: 12px;
+            transition: all 0.3s ease;
+            display: inline-block;
+        }
+
+        .example-btn:hover {
+            background: #667eea;
+            color: white;
+        }
+
+        .footer {
+            text-align: center;
+            color: white;
+            opacity: 0.8;
+            margin-top: 30px;
+        }
+
+        @media (max-width: 768px) {
+            .main-content {
+                grid-template-columns: 1fr;
+            }
+            
+            .form-row {
+                grid-template-columns: 1fr;
+            }
+            
+            .header h1 {
+                font-size: 2rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header class="header">
+            <h1><i class="fas fa-shield-alt"></i> ChemBio SafeGuard</h1>
+            <p>AI-Powered Chemical & Biological Safety Assessment System</p>
+        </header>
+
+        <div class="main-content">
+            <div class="safety-panel">
+                <h2><i class="fas fa-search"></i> Risk Assessment</h2>
+                
+                <div class="api-status" id="apiStatus">
+                    <i class="fas fa-circle"></i>
+                    <span>Checking API status...</span>
+                </div>
+
+                <form id="safetyForm">
+                    <div class="form-group">
+                        <label for="textInput">
+                            <i class="fas fa-edit"></i> Text to Analyze
+                        </label>
+                        <textarea 
+                            id="textInput" 
+                            placeholder="Enter text related to chemistry, biology, or research questions for safety assessment..."
+                            required
+                        ></textarea>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="userIdInput">
+                                <i class="fas fa-user"></i> User ID (Optional)
+                            </label>
+                            <input type="text" id="userIdInput" placeholder="user_123">
+                        </div>
+                        <div class="form-group">
+                            <label for="institutionInput">
+                                <i class="fas fa-building"></i> Institution (Optional)
+                            </label>
+                            <input type="text" id="institutionInput" placeholder="university">
+                        </div>
+                    </div>
+
+                    <button type="submit" class="analyze-btn" id="analyzeBtn">
+                        <i class="fas fa-search"></i>
+                        <span>Analyze Safety Risk</span>
+                    </button>
+                </form>
+
+                <div class="examples">
+                    <h4>Example Queries:</h4>
+                    <span class="example-btn" onclick="setExample('What is the chemical formula for water?')">Basic Chemistry</span>
+                    <span class="example-btn" onclick="setExample('How to synthesize aspirin?')">Pharmaceutical</span>
+                    <span class="example-btn" onclick="setExample('Safety protocols for handling acids')">Safety Procedures</span>
+                    <span class="example-btn" onclick="setExample('Laboratory equipment for organic synthesis')">Lab Equipment</span>
+                </div>
+
+                <div class="error-message" id="errorMessage"></div>
+
+                <div class="results-section" id="resultsSection">
+                    <h3><i class="fas fa-chart-line"></i> Assessment Results</h3>
+                    
+                    <div class="risk-indicator">
+                        <div class="risk-badge" id="riskBadge">Loading...</div>
+                        <div class="risk-score" id="riskScore">0.00</div>
+                    </div>
+
+                    <div class="risk-details">
+                        <div class="detail-card">
+                            <h4>Confidence Level</h4>
+                            <p id="confidenceLevel">--</p>
+                        </div>
+                        <div class="detail-card">
+                            <h4>Processing Time</h4>
+                            <p id="processingTime">-- ms</p>
+                        </div>
+                        <div class="detail-card">
+                            <h4>Request ID</h4>
+                            <p id="requestId">--</p>
+                        </div>
+                    </div>
+
+                    <div class="mitigation-section">
+                        <h4><i class="fas fa-exclamation-triangle"></i> Recommended Action</h4>
+                        <p id="mitigationAction">--</p>
+                    </div>
+
+                    <div class="explanation">
+                        <h4><i class="fas fa-info-circle"></i> Detailed Explanation</h4>
+                        <p id="explanationText">--</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="stats-panel">
+                <h3><i class="fas fa-chart-bar"></i> System Stats</h3>
+                
+                <div class="stats-card">
+                    <h3 id="modelParams">68M</h3>
+                    <p>Model Parameters</p>
+                </div>
+                
+                <div class="stats-card">
+                    <h3 id="avgLatency">~30ms</h3>
+                    <p>Average Latency</p>
+                </div>
+                
+                <div class="stats-card">
+                    <h3 id="throughput">~40/s</h3>
+                    <p>Max Throughput</p>
+                </div>
+
+                <div style="margin-top: 20px; padding: 15px; background: #f8f9fa; border-radius: 8px;">
+                    <h4 style="margin-bottom: 10px; color: #555;">
+                        <i class="fas fa-shield-alt"></i> Risk Categories
+                    </h4>
+                    <div style="margin-bottom: 8px;">
+                        <span class="risk-badge risk-benign">Benign</span>
+                        <span style="font-size: 12px; margin-left: 10px;">Safe content</span>
+                    </div>
+                    <div style="margin-bottom: 8px;">
+                        <span class="risk-badge risk-low_risk">Low Risk</span>
+                        <span style="font-size: 12px; margin-left: 10px;">Educational content</span>
+                    </div>
+                    <div style="margin-bottom: 8px;">
+                        <span class="risk-badge risk-medium_risk">Medium Risk</span>
+                        <span style="font-size: 12px; margin-left: 10px;">Requires caution</span>
+                    </div>
+                    <div style="margin-bottom: 8px;">
+                        <span class="risk-badge risk-high_risk">High Risk</span>
+                        <span style="font-size: 12px; margin-left: 10px;">Potentially harmful</span>
+                    </div>
+                    <div>
+                        <span class="risk-badge risk-critical_risk">Critical Risk</span>
+                        <span style="font-size: 12px; margin-left: 10px;">Dangerous content</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <footer class="footer">
+            <p>&copy; 2025 ChemBio SafeGuard | AI Safety System for Chemical & Biological Risk Assessment</p>
+            <p><i class="fas fa-github"></i> <a href="https://github.com/justin-mbca/chembio-safety-portfolio" style="color: white;">GitHub Repository</a></p>
+        </footer>
+    </div>
+
+    <script>
+        class ChemBioSafetyUI {
+            constructor() {
+                this.apiBaseUrl = 'http://localhost:8000';
+                this.init();
+                this.checkApiStatus();
+            }
+
+            init() {
+                const form = document.getElementById('safetyForm');
+                form.addEventListener('submit', (e) => this.handleSubmit(e));
+            }
+
+            async checkApiStatus() {
+                const statusElement = document.getElementById('apiStatus');
+                
+                try {
+                    const response = await fetch(`${this.apiBaseUrl}/health`);
+                    const data = await response.json();
+                    
+                    if (response.ok && data.status === 'healthy') {
+                        statusElement.className = 'api-status status-online';
+                        statusElement.innerHTML = '<i class="fas fa-check-circle"></i> <span>API Online - Ready for Assessment</span>';
+                        
+                        // Update stats
+                        if (data.uptime_seconds) {
+                            const uptime = Math.floor(data.uptime_seconds / 60);
+                            document.getElementById('avgLatency').textContent = `${uptime}min`;
+                        }
+                    } else {
+                        throw new Error('API unhealthy');
+                    }
+                } catch (error) {
+                    console.error('API connection error:', error);
+                    statusElement.className = 'api-status status-offline';
+                    statusElement.innerHTML = `<i class="fas fa-times-circle"></i> <span>API Offline - ${error.message}</span>`;
+                }
+            }
+
+            async handleSubmit(e) {
+                e.preventDefault();
+                
+                const textInput = document.getElementById('textInput');
+                const userIdInput = document.getElementById('userIdInput');
+                const institutionInput = document.getElementById('institutionInput');
+                const analyzeBtn = document.getElementById('analyzeBtn');
+                const errorMessage = document.getElementById('errorMessage');
+                
+                if (!textInput.value.trim()) {
+                    this.showError('Please enter text to analyze');
+                    return;
+                }
+
+                // Show loading state
+                analyzeBtn.disabled = true;
+                analyzeBtn.innerHTML = '<span class="loading"></span> <span>Analyzing...</span>';
+                errorMessage.style.display = 'none';
+
+                try {
+                    const payload = {
+                        text: textInput.value.trim(),
+                        return_explanation: true
+                    };
+
+                    if (userIdInput.value.trim()) {
+                        payload.user_id = userIdInput.value.trim();
+                    }
+
+                    if (institutionInput.value.trim()) {
+                        payload.context = {
+                            institution: institutionInput.value.trim()
+                        };
+                    }
+
+                    const startTime = performance.now();
+                    const response = await fetch(`${this.apiBaseUrl}/assess-safety`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify(payload)
+                    });
+
+                    const endTime = performance.now();
+                    const clientLatency = Math.round(endTime - startTime);
+
+                    if (!response.ok) {
+                        const errorData = await response.json();
+                        throw new Error(errorData.detail || 'Assessment failed');
+                    }
+
+                    const data = await response.json();
+                    this.displayResults(data, clientLatency);
+
+                } catch (error) {
+                    this.showError(`Assessment failed: ${error.message}`);
+                } finally {
+                    // Reset button
+                    analyzeBtn.disabled = false;
+                    analyzeBtn.innerHTML = '<i class="fas fa-search"></i> <span>Analyze Safety Risk</span>';
+                }
+            }
+
+            displayResults(data, clientLatency) {
+                const resultsSection = document.getElementById('resultsSection');
+                
+                // Update risk indicator
+                const riskBadge = document.getElementById('riskBadge');
+                const riskScore = document.getElementById('riskScore');
+                
+                riskBadge.textContent = data.risk_category.replace('_', ' ');
+                riskBadge.className = `risk-badge risk-${data.risk_category}`;
+                riskScore.textContent = (data.risk_score * 100).toFixed(1) + '%';
+
+                // Update details
+                document.getElementById('confidenceLevel').textContent = (data.confidence * 100).toFixed(1) + '%';
+                document.getElementById('processingTime').textContent = `${data.processing_time_ms.toFixed(1)}ms (${clientLatency}ms total)`;
+                document.getElementById('requestId').textContent = data.request_id.substring(0, 8) + '...';
+
+                // Update mitigation
+                const mitigationAction = document.getElementById('mitigationAction');
+                mitigationAction.textContent = this.formatMitigationAction(data.mitigation_action);
+
+                // Update explanation
+                document.getElementById('explanationText').textContent = data.explanation || 'No detailed explanation available.';
+
+                // Show results
+                resultsSection.style.display = 'block';
+                resultsSection.scrollIntoView({ behavior: 'smooth' });
+            }
+
+            formatMitigationAction(action) {
+                const actions = {
+                    'ALLOW_WITH_MONITORING': 'Allow with monitoring - Content appears safe for general use',
+                    'ADD_WARNING': 'Add safety warning - Content requires cautionary notice',
+                    'MODIFY_RESPONSE': 'Modify response - Content should be altered for safety',
+                    'BLOCK_COMPLETELY': 'Block completely - Content poses significant safety risk'
+                };
+                return actions[action] || action;
+            }
+
+            showError(message) {
+                const errorMessage = document.getElementById('errorMessage');
+                errorMessage.textContent = message;
+                errorMessage.style.display = 'block';
+                
+                setTimeout(() => {
+                    errorMessage.style.display = 'none';
+                }, 5000);
+            }
+        }
+
+        function setExample(text) {
+            document.getElementById('textInput').value = text;
+        }
+
+        // Initialize the application
+        window.addEventListener('DOMContentLoaded', () => {
+            new ChemBioSafetyUI();
+        });
+
+        // Auto-refresh API status every 30 seconds
+        setInterval(() => {
+            if (window.chemBioUI) {
+                window.chemBioUI.checkApiStatus();
+            }
+        }, 30000);
+    </script>
+</body>
+</html>
