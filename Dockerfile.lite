@@ -1,0 +1,32 @@
+# Ultra-lightweight Dockerfile for Railway deployment
+FROM python:3.11-slim
+
+# Set environment variables
+ENV PYTHONUNBUFFERED=1
+ENV PYTHONDONTWRITEBYTECODE=1
+
+# Set working directory
+WORKDIR /app
+
+# Install minimal system dependencies
+RUN apt-get update && apt-get install -y curl && rm -rf /var/lib/apt/lists/*
+
+# Copy lightweight requirements
+COPY requirements-lite.txt requirements.txt
+
+# Install minimal Python dependencies
+RUN pip install --upgrade pip && pip install --no-cache-dir -r requirements.txt
+
+# Copy only the lightweight API
+COPY simple_api_lite.py .
+
+# Create non-root user
+RUN useradd -m -u 1000 chemapp && chown -R chemapp:chemapp /app
+USER chemapp
+
+# Health check
+HEALTHCHECK --interval=30s --timeout=10s --start-period=30s --retries=3 \
+    CMD curl -f http://localhost:${PORT:-3000}/health || exit 1
+
+# Run the lightweight API
+CMD python -c "import uvicorn; import os; uvicorn.run('simple_api_lite:app', host='0.0.0.0', port=int(os.environ.get('PORT', 3000)))"

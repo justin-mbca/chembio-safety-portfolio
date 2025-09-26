@@ -1,0 +1,7 @@
+# Ultra-lightweight requirements for Railway deployment
+# Total estimated image size: < 2GB
+
+fastapi>=0.100.0
+uvicorn>=0.23.0
+pydantic>=2.0.0
+python-multipart>=0.0.5

@@ -1,0 +1,29 @@
+# Minimal requirements for Railway deployment (CPU-only, smaller image)
+
+# Core ML - CPU only versions
+torch>=2.0.0 --index-url https://download.pytorch.org/whl/cpu
+transformers>=4.30.0
+numpy>=1.24.0
+scikit-learn>=1.3.0
+
+# Web framework
+fastapi>=0.100.0
+uvicorn>=0.23.0
+pydantic>=2.0.0
+
+# HTTP and async support
+aiohttp>=3.8.0
+httpx>=0.23.0
+python-multipart>=0.0.5
+
+# Utilities
+pandas>=1.5.0
+tqdm>=4.64.0
+
+# Production server
+gunicorn>=20.1.0
+
+# Remove heavy dependencies for Railway deployment:
+# - No torchaudio (not needed for text processing)
+# - No redis (can be added later if needed)
+# - CPU-only torch to reduce size significantly
