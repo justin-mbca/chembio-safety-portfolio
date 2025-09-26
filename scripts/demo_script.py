@@ -24,9 +24,14 @@ from typing import List, Dict
 import logging
 from datetime import datetime
 
+# Add src directory to Python path
+import sys
+from pathlib import Path
+sys.path.insert(0, str(Path(__file__).parent.parent / "src"))
+
 # Import our custom modules
-from risk_classifier import ChemBioRiskClassifier, SafetyMiddleware, RiskEvaluator
-from training_pipeline import ChemBioTrainer, ComprehensiveEvaluator, AdversarialTester
+from src.core.risk_classifier import ChemBioRiskClassifier, SafetyMiddleware, RiskEvaluator
+from src.core.training_pipeline import ChemBioTrainer, ComprehensiveEvaluator, AdversarialTester
 from transformers import AutoTokenizer
 
 # Set up logging

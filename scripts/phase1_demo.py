@@ -4,11 +4,15 @@ Phase 1 Database Integration Demo
 Demonstrates enhanced threat detection capabilities with regulatory database verification
 """
 
+import sys
+from pathlib import Path
+sys.path.insert(0, str(Path(__file__).parent.parent / "src"))
+
 import asyncio
 import json
 import time
 from typing import List, Dict
-from database_integration import Phase1DatabaseIntegrator
+from src.core.database_integration import Phase1DatabaseIntegrator
 
 class Phase1Demo:
     """Demo showcasing Phase 1 database integration capabilities"""

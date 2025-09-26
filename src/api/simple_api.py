@@ -15,7 +15,7 @@ import uvicorn
 from transformers import AutoTokenizer
 
 # Import our custom modules
-from risk_classifier import ChemBioRiskClassifier, SafetyMiddleware
+from src.core.risk_classifier import ChemBioRiskClassifier, SafetyMiddleware
 
 # Pydantic models for API
 class SafetyRequest(BaseModel):

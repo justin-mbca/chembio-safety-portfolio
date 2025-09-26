@@ -117,6 +117,42 @@ Once started, you can access:
 - **📊 API Documentation**: http://localhost:8000/docs  
 - **❤️ Health Check**: http://localhost:8000/health
 
+## 📁 Project Structure
+
+```
+chembio-safety-portfolio/
+├── src/                          # Core source code
+│   ├── core/                     # Core ML and safety modules
+│   │   ├── database_integration.py  # Phase 1 database integration
+│   │   ├── main.py              # Main application logic
+│   │   ├── risk_classifier.py   # ML risk assessment model
+│   │   └── training_pipeline.py # Model training pipeline
+│   ├── api/                     # API server modules
+│   │   ├── simple_api.py        # FastAPI REST endpoints
+│   │   └── frontend_server.py   # Frontend static file server
+│   └── models/                  # Data models and schemas
+├── frontend/                    # Web interface
+│   └── index.html              # Main web application
+├── docs/                       # Documentation
+│   ├── PHASE1_TESTING_GUIDE.md # Comprehensive testing procedures
+│   ├── PHASE1_SUMMARY.md       # Implementation documentation
+│   ├── CONTRIBUTING.md         # Contribution guidelines
+│   └── DEPLOYMENT.md          # Production deployment guide
+├── tests/                      # Test suite
+│   └── test_api.py            # API endpoint tests
+├── scripts/                    # Utility and demo scripts
+│   ├── demo_script.py         # Basic system demonstration
+│   ├── phase1_demo.py         # Phase 1 database demo
+│   └── start_system.sh        # System launcher script
+├── config/                     # Configuration files
+│   └── settings.py           # Application settings
+├── logs/                       # Application logs
+├── data/                       # Demo data and results
+├── requirements.txt            # Python dependencies
+├── run.py                      # Main application entry point
+└── README.md                  # This file
+```
+
 ### 🔧 **Manual Installation**
 
 ```bash
