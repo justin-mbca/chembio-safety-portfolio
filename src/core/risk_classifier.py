@@ -12,7 +12,7 @@ import asyncio
 
 # Phase 1 Database Integration
 try:
-    from database_integration import Phase1DatabaseIntegrator, DatabaseResult
+    from .database_integration import Phase1DatabaseIntegrator, DatabaseResult
     DATABASE_INTEGRATION_AVAILABLE = True
 except ImportError:
     DATABASE_INTEGRATION_AVAILABLE = False
