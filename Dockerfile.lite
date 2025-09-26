@@ -17,8 +17,9 @@ COPY requirements-lite.txt requirements.txt
 # Install minimal Python dependencies
 RUN pip install --upgrade pip && pip install --no-cache-dir -r requirements.txt
 
-# Copy only the lightweight API
+# Copy the lightweight API and frontend
 COPY simple_api_lite.py .
+COPY frontend/ frontend/
 
 # Create non-root user
 RUN useradd -m -u 1000 chemapp && chown -R chemapp:chemapp /app

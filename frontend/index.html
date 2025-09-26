@@ -488,7 +488,8 @@
     <script>
         class ChemBioSafetyUI {
             constructor() {
-                this.apiBaseUrl = 'http://localhost:3000';
+                // Use relative URLs when deployed, localhost for development
+                this.apiBaseUrl = window.location.hostname === 'localhost' ? 'http://localhost:3000' : '';
                 this.init();
                 this.checkApiStatus();
             }

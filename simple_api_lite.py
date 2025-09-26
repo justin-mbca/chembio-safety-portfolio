@@ -3,6 +3,8 @@
 
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
+from fastapi.responses import FileResponse
 from pydantic import BaseModel
 import os
 import time
@@ -32,6 +34,14 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+# Serve static files (frontend)
+app.mount("/static", StaticFiles(directory="frontend"), name="static")
+
+# Serve the main frontend page
+@app.get("/")
+def serve_frontend():
+    return FileResponse("frontend/index.html")
 
 class SafetyRequest(BaseModel):
     text: str
