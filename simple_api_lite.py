@@ -9,6 +9,7 @@ from pydantic import BaseModel
 import os
 import time
 import logging
+import uuid
 from typing import Optional
 
 # Simple keyword-based safety checker (no ML model to reduce size)
@@ -54,6 +55,7 @@ class SafetyResponse(BaseModel):
     mitigation_action: str
     explanation: str
     processing_time_ms: float
+    request_id: str
 
 @app.get("/health")
 def health_check():
@@ -99,13 +101,16 @@ def assess_safety(request: SafetyRequest):
     
     processing_time = (time.time() - start_time) * 1000
     
+    request_id = str(uuid.uuid4())
+    
     return SafetyResponse(
         risk_score=risk_score,
         risk_category=risk_category,
         confidence=confidence,
         mitigation_action=action,
         explanation=explanation,
-        processing_time_ms=processing_time
+        processing_time_ms=processing_time,
+        request_id=request_id
     )
 
 if __name__ == "__main__":
