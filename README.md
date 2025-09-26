@@ -221,7 +221,52 @@ curl -X POST "http://localhost:8000/assess-safety" \
   -d '{"text": "Steps to create ricin biological weapon"}'
 ```
 
-## 📊 System Performance
+## � Production Deployment
+
+### 🐳 **Quick Docker Deployment (Recommended)**
+```bash
+# One-command deployment with Docker
+./deploy.sh docker
+
+# This will:
+# ✅ Build and start all services
+# ✅ Set up Redis database
+# ✅ Configure load balancing
+# ✅ Enable health monitoring
+# ✅ Start on http://localhost:3001
+```
+
+### 🖥️ **Local Production Setup**
+```bash
+# Deploy on your own server
+./deploy.sh local
+
+# Or manual setup:
+python -m venv .venv
+source .venv/bin/activate
+pip install -r requirements.txt
+cp .env.production.example .env.production
+# Edit .env.production with your settings
+python run.py
+```
+
+### ☁️ **Cloud Deployment Options**
+- **AWS**: ECS Fargate with load balancer
+- **Google Cloud**: Cloud Run with auto-scaling
+- **Azure**: Container Instances with Redis Cache
+- **Kubernetes**: Full orchestration with HPA
+
+📖 **See [docs/PRODUCTION_DEPLOYMENT.md](docs/PRODUCTION_DEPLOYMENT.md) for comprehensive deployment guides**
+
+### 📋 **Production Features**
+- ✅ **Auto-scaling**: Handles variable load automatically
+- ✅ **Health monitoring**: Continuous system health checks
+- ✅ **Zero-downtime deployment**: Rolling updates without service interruption
+- ✅ **Security**: HTTPS, rate limiting, input validation
+- ✅ **Monitoring**: Comprehensive logging and metrics
+- ✅ **Backup**: Automated data backup and recovery
+
+## �📊 System Performance
 
 ### 🎯 **Safety Effectiveness**
 
