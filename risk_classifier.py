@@ -7,6 +7,16 @@ import json
 import numpy as np
 from dataclasses import dataclass
 import logging
+import re
+import asyncio
+
+# Phase 1 Database Integration
+try:
+    from database_integration import Phase1DatabaseIntegrator, DatabaseResult
+    DATABASE_INTEGRATION_AVAILABLE = True
+except ImportError:
+    DATABASE_INTEGRATION_AVAILABLE = False
+    print("Warning: Database integration not available. Running in basic mode.")
 
 @dataclass
 class RiskAssessment:
@@ -123,6 +133,51 @@ class ChemBioRiskClassifier(nn.Module):
         }
     
     def predict_risk(
+        self,
+        text: str,
+        tokenizer: AutoTokenizer,
+        device: torch.device
+    ) -> RiskAssessment:
+        """
+        Predict risk for a given text input (basic ML + keyword approach)
+        """
+        return self._basic_predict_risk(text, tokenizer, device)
+    
+    async def enhanced_predict_risk(
+        self,
+        text: str,
+        tokenizer: AutoTokenizer,
+        device: torch.device
+    ) -> RiskAssessment:
+        """
+        Enhanced risk prediction with Phase 1 database integration
+        """
+        if not DATABASE_INTEGRATION_AVAILABLE:
+            return self._basic_predict_risk(text, tokenizer, device)
+        
+        # 1. Get basic ML + keyword assessment
+        base_assessment = self._basic_predict_risk(text, tokenizer, device)
+        
+        # 2. Extract potential entities from text
+        entities = self._extract_chemical_biological_entities(text)
+        
+        if not entities:
+            return base_assessment
+        
+        # 3. Query Phase 1 databases
+        try:
+            integrator = Phase1DatabaseIntegrator()
+            db_results = await integrator.enhanced_threat_assessment(entities)
+            
+            # 4. Combine assessments
+            return self._combine_assessments(base_assessment, db_results, entities)
+            
+        except Exception as e:
+            logging.warning(f"Database integration failed: {e}")
+            # Fallback to basic assessment
+            return base_assessment
+    
+    def _basic_predict_risk(
         self,
         text: str,
         tokenizer: AutoTokenizer,
@@ -320,6 +375,115 @@ class ChemBioRiskClassifier(nn.Module):
                 }
         
         return None
+    
+    def _extract_chemical_biological_entities(self, text: str) -> List[str]:
+        """
+        Extract potential chemical and biological entity names from text
+        Uses pattern matching to identify likely chemical/biological terms
+        """
+        entities = []
+        text_lower = text.lower()
+        
+        # Chemical name patterns
+        chemical_patterns = [
+            # Standard chemical nomenclature
+            r'\b[A-Za-z]+-?[0-9]*[A-Za-z]*(?:\s+(?:acid|oxide|chloride|sulfate|nitrate|phosphate|carbonate|hydroxide|bromide|fluoride|iodide))\b',
+            
+            # Organic compound patterns  
+            r'\b(?:methyl|ethyl|propyl|butyl|phenyl|benzyl)[\w\-]+\b',
+            
+            # Common chemical suffixes
+            r'\b\w+(?:ine|ane|ene|yne|ol|al|one|ate|ide)\b',
+            
+            # Gas compounds
+            r'\b\w+\s+gas\b',
+            
+            # Known dangerous chemicals (from keyword list)
+            r'\b(?:sarin|tabun|soman|ricin|anthrax|botulinum|mustard|phosgene)\b',
+        ]
+        
+        # Biological entity patterns
+        biological_patterns = [
+            # Scientific nomenclature (genus species)
+            r'\b[A-Z][a-z]+\s+[a-z]+\b',
+            
+            # Virus patterns
+            r'\b\w+\s+virus\b',
+            r'\bh[0-9]+n[0-9]+\b',  # Influenza strains
+            
+            # Bacterial patterns
+            r'\b(?:escherichia|salmonella|bacillus|clostridium|yersinia|francisella|brucella|burkholderia)\s+\w+\b',
+            
+            # Toxin patterns
+            r'\b\w+\s+toxin\b',
+            
+            # Disease/pathogen names
+            r'\b(?:ebola|marburg|lassa|anthrax|plague|tularemia|glanders|ricin|botulism)\b',
+        ]
+        
+        # Extract matches
+        all_patterns = chemical_patterns + biological_patterns
+        for pattern in all_patterns:
+            matches = re.findall(pattern, text_lower, re.IGNORECASE)
+            entities.extend(matches)
+        
+        # Clean and deduplicate
+        entities = [entity.strip() for entity in entities if len(entity.strip()) > 2]
+        entities = list(set(entities))  # Remove duplicates
+        
+        # Filter out common words that aren't actual entities
+        common_words = {'the', 'and', 'for', 'with', 'this', 'that', 'are', 'can', 'may', 'will', 'use', 'make'}
+        entities = [e for e in entities if e.lower() not in common_words]
+        
+        return entities[:20]  # Limit to 20 entities to avoid excessive API calls
+    
+    def _combine_assessments(self, base_assessment: RiskAssessment, db_results: List[DatabaseResult], entities: List[str]) -> RiskAssessment:
+        """
+        Combine basic ML assessment with database verification results
+        """
+        if not db_results:
+            return base_assessment
+        
+        # Find highest risk database result
+        risk_levels = {'critical_risk': 4, 'high_risk': 3, 'medium_risk': 2, 'low_risk': 1}
+        highest_db_result = max(db_results, key=lambda x: risk_levels.get(x.risk_level, 0))
+        
+        # If database found critical risk, override ML assessment
+        if highest_db_result.risk_level == 'critical_risk':
+            return RiskAssessment(
+                risk_score=0.95,
+                risk_category='critical_risk',
+                confidence=highest_db_result.confidence,
+                explanation=f"Database verification: {highest_db_result.explanation}. Detected entities: {', '.join([r.entity for r in db_results])}",
+                mitigation_action='BLOCK_COMPLETELY'
+            )
+        
+        # If database risk is higher than ML assessment, use database result
+        db_score = risk_levels.get(highest_db_result.risk_level, 0)
+        ml_score = risk_levels.get(base_assessment.risk_category, 0)
+        
+        if db_score > ml_score:
+            return RiskAssessment(
+                risk_score=highest_db_result.confidence,
+                risk_category=highest_db_result.risk_level,
+                confidence=min(highest_db_result.confidence, base_assessment.confidence + 0.1),
+                explanation=f"Database alert: {highest_db_result.explanation} | ML assessment: {base_assessment.explanation}",
+                mitigation_action=self._determine_mitigation(highest_db_result.confidence, highest_db_result.risk_level)
+            )
+        
+        # Otherwise, enhance ML assessment with database context
+        enhanced_explanation = base_assessment.explanation
+        if db_results:
+            db_context = "; ".join([f"{r.entity} ({r.database})" for r in db_results[:3]])
+            enhanced_explanation += f" | Database context: {db_context}"
+        
+        return RiskAssessment(
+            risk_score=base_assessment.risk_score,
+            risk_category=base_assessment.risk_category, 
+            confidence=min(base_assessment.confidence + 0.05, 0.95),  # Slight confidence boost
+            explanation=enhanced_explanation,
+            mitigation_action=base_assessment.mitigation_action
+        )
 
 
 class SafetyMiddleware:
